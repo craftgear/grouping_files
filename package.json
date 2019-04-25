@@ -4,7 +4,7 @@
   "description": "group files by name similarities ",
   "main": "build/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest ./src",
     "start": "ts-node src/index.ts"
   },
   "author": "Shunsuke Watanabe <craftgear@gmail.com>",
@@ -19,8 +19,30 @@
     "eslint-import-resolver-node": "^0.3.2",
     "eslint-plugin-import": "^2.17.2",
     "jest": "^24.7.1",
+    "prettier": "^1.17.0",
     "ts-jest": "^24.0.2",
     "ts-node": "^8.1.0",
     "typescript": "^3.4.4"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "\\.(ts|tsx)$": "<rootDir>/node_modules/ts-jest"
+    },
+    "testPathIgnorePatterns": [
+      "\\.snap$",
+      "built",
+      "<rootdir>/node_modules"
+    ],
+    "cacheDirectory": ".jest/cache",
+    "globals": {
+      "ts-jest": {
+        "diagnostics": false
+      }
+    }
   }
 }
