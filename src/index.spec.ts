@@ -4,18 +4,19 @@ import {
   takeUntil,
   reverseString,
   sum,
+  splitFilenameIntoWords,
   headSimilarity,
   tailSimilarity,
-  similarity,
+  similarity
 } from './index';
 
 describe('grouping_files', () => {
   it('calcSimilarity', () => {
-    expect(calcSimilarity('aaa', 'bbbccc')).toEqual([0, 0, 0]);
-    expect(calcSimilarity('aaa', 'abbccc')).toEqual([1, 0, 0]);
-    expect(calcSimilarity('aaa', 'bbaccc')).toEqual([0, 0, 1]);
-    expect(calcSimilarity('aaa', 'babccc')).toEqual([0, 1, 0]);
-    expect(calcSimilarity('aaa', 'aaaccc')).toEqual([1, 1, 1]);
+    expect(calcSimilarity('aaa', 'bbb-ccc')).toEqual([0]);
+    expect(calcSimilarity('aaa', 'aaa - aaa bbaccc')).toEqual([1]);
+    expect(calcSimilarity('aaa bbb', 'aaa - bbb@ccc')).toEqual([1, 1]);
+    expect(calcSimilarity('ccc@bbb', 'ccc aaa aaa')).toEqual([1, 0]);
+    expect(calcSimilarity('aaa', 'aaaccc')).toEqual([0]);
   });
 
   it('zipWith', function() {
@@ -23,7 +24,10 @@ describe('grouping_files', () => {
   });
 
   it('takeUntil', function() {
-    expect(takeUntil(v => v === true, [true, true, false, true])).toEqual([true, true]);
+    expect(takeUntil(v => v === true, [true, true, false, true])).toEqual([
+      true,
+      true
+    ]);
   });
 
   it('reverseString', function() {
@@ -34,15 +38,25 @@ describe('grouping_files', () => {
     expect(sum([1, 2, 3, 4, 5])).toEqual(15);
   });
 
+  it('splitFilenameIntoWords', () => {
+    expect(splitFilenameIntoWords('aaa - bbb')).toEqual(['aaa', 'bbb']);
+  });
+
   it('headSimilarity', function() {
-    expect(headSimilarity('aaabbbcccc.md', 'aaabxxccyyyyyycc.txt')).toEqual(4);
+    expect(
+      headSimilarity('aaa - bbb - cccc.md', 'aaa - bbb -xx cc yyyy@cc.txt')
+    ).toEqual(2);
   });
 
   it('tailSimilarity', function() {
-    expect(tailSimilarity('aaabbbcccc.md', 'aaabxxccyyyycc.txt')).toEqual(2);
+    expect(
+      tailSimilarity('aaa - bbb - cc.md', 'aaa - b -xx cc yyyy@cc.txt')
+    ).toEqual(1);
   });
 
   it('similarity', function() {
-    expect(similarity('aaabbbcccc.md', 'aaabxxccyyyycc.txt')).toEqual(6);
+    expect(
+      similarity('aaa - bbb - xx cc.md', 'aaa - b - xx cc yyyy@cc.txt')
+    ).toEqual(3);
   });
 });
