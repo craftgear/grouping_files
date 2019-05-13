@@ -1,12 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import process from 'process';
 
-export const zipWith = <T1, T2, T3>(
-  fn: (x: T1, y: T2) => {},
-  xs: T1[],
-  ys: T2[]
-): T3[] => {
-  console.log(xs, ys);
+export const zipWith = <T1, T2, T3>(fn: (x: T1, y: T2) => {}, xs: T1[], ys: T2[]): T3[] => {
   return xs
     .map((v, i) => {
       if (ys[i]) {
@@ -41,17 +37,21 @@ export const sum = (xs: number[]): number => {
   return xs.reduce((accum, curr) => accum + curr, 0);
 };
 
-export const withoutExt = (x: string): string =>
-  x.replace(/\.[a-zA-Z0-9]*$/, '');
+export const withoutExt = (x: string): string => x.replace(/\.[a-zA-Z0-9]*$/, '');
 
-export const splitFilenameIntoWords = (filename: string): string[] => {
-  return filename.split(/[\s-@\.]/g).filter(x => x);
-};
+export const splitFilenameIntoWords = (() => {
+  const memo: { [key: string]: string[] } = {};
+  return (filename: string): string[] => {
+    if (memo[filename]) {
+      return memo[filename];
+    }
+    const result = filename.split(/[\s\-_@\.\(\)]/g).filter(x => x);
+    memo[filename] = result;
+    return result;
+  };
+})();
 
-export const calcSimilarity = (
-  filename: string,
-  otherFilename: string
-): number[] => {
+export const calcSimilarity = (filename: string, otherFilename: string): number[] => {
   return zipWith(
     (x, y) => (x === y ? 1 : 0),
     splitFilenameIntoWords(filename),
@@ -85,10 +85,8 @@ type Similarity = {
 const similarityRank = (files: string[]): Similarity[] => {
   const sortedFiles = files.sort();
 
-  const recursive = (
-    ranking: Similarity[],
-    [head, ...tail]: string[]
-  ): Similarity[] => {
+  const recursive = (ranking: Similarity[], [head, ...tail]: string[]): Similarity[] => {
+    console.log('********* head', head);
     if (!head) {
       return ranking;
     }

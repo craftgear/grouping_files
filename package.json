@@ -5,7 +5,7 @@
   "main": "build/index.js",
   "scripts": {
     "test": "jest ./src",
-    "start": "ts-node src/index.ts"
+    "start": "node --stack-size=16000 --harmony-async-iteration --require ts-node/register src/index.ts"
   },
   "author": "Shunsuke Watanabe <craftgear@gmail.com>",
   "license": "MIT",
