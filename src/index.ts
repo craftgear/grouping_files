@@ -1,8 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import process from 'process';
+import fse from 'fs-extra';
 
-export const zipWith = <T1, T2, T3>(fn: (x: T1, y: T2) => {}, xs: T1[], ys: T2[]): T3[] => {
+export const zipWith = <T1, T2, T3>(
+  fn: (x: T1, y: T2) => {},
+  xs: T1[],
+  ys: T2[]
+): T3[] => {
   return xs
     .map((v, i) => {
       if (ys[i]) {
@@ -37,7 +42,8 @@ export const sum = (xs: number[]): number => {
   return xs.reduce((accum, curr) => accum + curr, 0);
 };
 
-export const withoutExt = (x: string): string => x.replace(/\.[a-zA-Z0-9]*$/, '');
+export const withoutExt = (x: string): string =>
+  x.replace(/\.[a-zA-Z0-9]*$/, '');
 
 export const splitFilenameIntoWords = (() => {
   const memo: { [key: string]: string[] } = {};
@@ -51,7 +57,10 @@ export const splitFilenameIntoWords = (() => {
   };
 })();
 
-export const calcSimilarity = (filename: string, otherFilename: string): number[] => {
+export const calcSimilarity = (
+  filename: string,
+  otherFilename: string
+): number[] => {
   return zipWith(
     (x, y) => (x === y ? 1 : 0),
     splitFilenameIntoWords(filename),
@@ -78,53 +87,72 @@ export const similarity = (x: string, y: string): number => {
 };
 
 type Similarity = {
-  similarity: number;
-  members: string[];
+  [similarity: string]: string[];
 };
 
-const similarityRank = (files: string[]): Similarity[] => {
-  const sortedFiles = files.sort();
+const similarityRank = (head: string, rest: string[]): Similarity => {
+  return rest
+    .map(filename => ({
+      similarity: headSimilarity(head, filename),
+      filename
+    }))
+    .reduce((accum: any, curr: any) => {
+      if (curr.similarity === 0) {
+        return accum;
+      }
+      const similarFiles = accum[curr.similarity] || [];
+      return {
+        ...accum,
+        [curr.similarity]: [curr.filename, ...similarFiles]
+      };
+    }, {});
+};
 
-  const recursive = (ranking: Similarity[], [head, ...tail]: string[]): Similarity[] => {
-    console.log('********* head', head);
-    if (!head) {
-      return ranking;
+const moveFilesIntoDir = (basedir: string, filesToMove: string[]) => {
+  const newDirname = path.join(
+    basedir,
+    splitFilenameIntoWords(filesToMove[0])
+      .slice(0, 3)
+      .join(' ')
+  );
+  if (!fs.existsSync(newDirname)) {
+    fs.mkdirSync(newDirname);
+  }
+  console.log('moving files into a directory: ', newDirname);
+
+  filesToMove.forEach(x => {
+    const source = path.join(basedir, x);
+    if (!fs.existsSync(source)) {
+      return;
     }
-
-    const highestSimilarFiles = tail.reduce(
-      (accum: Similarity, curr: string): Similarity => {
-        const similarity = headSimilarity(head, curr);
-        if (similarity === 0) {
-          return accum;
-        }
-
-        if (accum.similarity > similarity) {
-          return accum;
-        }
-
-        return { similarity, members: [...accum.members, curr] };
-      },
-      { similarity: 0, members: [head] }
-    );
-
-    // console.log(
-    // '********* highe',
-    // highestSimilarFiles.similarity,
-    // highestSimilarFiles.members.length
-    // );
-    return recursive([...ranking, highestSimilarFiles], tail);
-  };
-
-  return recursive([], sortedFiles);
+    if (source === newDirname) {
+      return;
+    }
+    const dist = path.join(newDirname, x);
+    fse.copySync(source, dist);
+    fse.removeSync(source);
+  });
 };
-
-const zip = (filename: string) => {};
 
 const main = () => {
+  const threshold = 2;
   const dirName = path.resolve(process.argv[2] || './');
   const files = fs.readdirSync(dirName).filter(v => !v.startsWith('.'));
-  const ranking = similarityRank(files);
-  console.log('********* ranking', ranking);
+  let sortedFiles = files.sort();
+  while (sortedFiles.length > 0) {
+    const [head, ...rest] = sortedFiles;
+    const ranking = similarityRank(head, rest);
+    const maxSimilarity = Object.keys(ranking).reduce((max, curr) => {
+      return Number(curr) > max ? Number(curr) : max;
+    }, 0);
+    if (maxSimilarity > threshold) {
+      const filesToMove = [head, ...ranking[maxSimilarity]];
+      moveFilesIntoDir(dirName, filesToMove);
+      sortedFiles = sortedFiles.filter(x => !filesToMove.includes(x));
+    } else {
+      sortedFiles = sortedFiles.slice(1);
+    }
+  }
 };
 
 main();
