@@ -87,16 +87,21 @@ export const similarity = (x: string, y: string): number => {
 };
 
 type Similarity = {
+  similarity: number;
+  filename: string;
+};
+
+type SimilarFiles = {
   [similarity: string]: string[];
 };
 
-const similarityRank = (head: string, rest: string[]): Similarity => {
+const similarityRank = (head: string, rest: string[]): SimilarFiles => {
   return rest
     .map(filename => ({
       similarity: headSimilarity(head, filename),
       filename
     }))
-    .reduce((accum: any, curr: any) => {
+    .reduce((accum: SimilarFiles, curr: Similarity) => {
       if (curr.similarity === 0) {
         return accum;
       }
