@@ -140,6 +140,7 @@ const moveFilesIntoDir = (basedir: string, filesToMove: string[]) => {
 };
 
 const main = () => {
+  // TODO thresold をオプション化する
   const threshold = 2;
   const dirName = path.resolve(process.argv[2] || './');
   const files = fs.readdirSync(dirName).filter(v => !v.startsWith('.'));
