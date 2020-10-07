@@ -141,7 +141,8 @@ const moveFilesIntoDir = (basedir: string, filesToMove: string[]) => {
 
 const main = () => {
   // TODO thresold をオプション化する
-  const threshold = 2;
+  // TODO dryrunオプションを付ける
+  const threshold = 3;
   const dirName = path.resolve(process.argv[2] || './');
   const files = fs.readdirSync(dirName).filter(v => !v.startsWith('.'));
   let sortedFiles = files.sort();
